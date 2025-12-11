@@ -2,10 +2,10 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Imprimir etiquetas de anteojos</title>
+  <title>Etiquetas de anteojos • Óptica Cristal</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- JsBarcode para generar el código de barras -->
+  <!-- JsBarcode para generar el código de barras (CODE128) -->
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
 
   <style>
@@ -121,13 +121,6 @@
 
     button.secondary:hover { background: #d1d5db; }
 
-    button.danger {
-      background: #f97373;
-      color: #111827;
-    }
-
-    button.danger:hover { background: #ef4444; }
-
     .status {
       margin-top: 8px;
       font-size: 0.8rem;
@@ -142,9 +135,8 @@
       border-radius: 8px;
       border: 1px solid var(--line);
       padding: 5mm;
-      /* A4: 210 x 297mm */
-      width: 210mm;
-      min-height: 297mm;
+      width: 210mm;          /* A4 ancho */
+      min-height: 297mm;     /* A4 alto */
       margin-left: auto;
       margin-right: auto;
 
@@ -202,7 +194,7 @@
     }
 
     .linea-extra {
-      font-size: 2.3mm;
+      font-size: 2.2mm;
       line-height: 1.1;
       white-space: nowrap;
       overflow: hidden;
@@ -250,28 +242,28 @@
 </head>
 <body>
   <header>
-    <h1>Etiquetas de anteojos • Óptica Cristal</h1>
+    <h1>Imprimir etiquetas de anteojos</h1>
     <span>Etiqueta 60×30 mm • Logo 17×10 mm • Hoja A4</span>
   </header>
 
   <main>
     <section class="panel">
-      <h2>1. Elegí los artículos</h2>
+      <h2>1. Números de artículo</h2>
       <p>
-        Escribí los <strong>N° de artículo (columna A)</strong>, separados por coma o uno por línea.<br />
-        Ejemplo: <code>1001, 1002, 1003</code>
+        Escribí los <strong>N° de anteojo (columna A)</strong>, separados por coma o uno por línea.<br />
+        Ejemplo: <code>1318,1319,1320</code>
       </p>
 
-      <label for="listaArticulos">N° de artículos</label>
+      <label for="listaArticulos">N° de anteojos</label>
       <textarea id="listaArticulos" placeholder="Ejemplo:
-1001
-1002
-1003"></textarea>
+1318
+1319
+1320"></textarea>
 
       <div class="btn-row">
         <button type="button" class="primary" onclick="generarEtiquetas()">Generar etiquetas</button>
-        <button type="button" class="secondary" onclick="limpiarTodo()">Limpiar</button>
         <button type="button" class="secondary" onclick="window.print()">Imprimir</button>
+        <button type="button" class="secondary" onclick="limpiarTodo()">Limpiar</button>
       </div>
 
       <div id="status" class="status"></div>
@@ -286,47 +278,32 @@
 
   <script>
     /*************************************************
-     * CONFIGURACIÓN
+     * CONFIGURACIÓN: tu Apps Script
      *************************************************/
-    // PONÉ ACÁ TU URL DE APPS SCRIPT (la que ya usás para STOCK)
-    const API_URL = "https://script.google.com/macros/s/AKfycbybza1V9Om8MHI04iFBF4XM8I6am4QG3QOSr6tPnXV3vJwx5FhAzD21Iy8z6FJ1-3v3SQ/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbwUSRtYk5HXwEtt8IYtHWiwStWxOTnptGqgVgpLauZEw8-QBjBJ6uqm6RgqJBroTnCJ/exec";
 
     /**
-     * Esta función transforma el JSON que te devuelve tu Apps Script
-     * en un objeto estándar para armar la etiqueta.
+     * Mapea la respuesta de handleBuscarArmazon_ a lo que necesita la etiqueta.
      *
-     * IMPORTANTE: Ajustá los nombres de propiedades según tu respuesta real.
-     * Ejemplo de objeto esperado:
-     * {
-     *   numero: "1234",          // Columna A
-     *   marca: "Ray-Ban",        // Columna B
-     *   modelo: "Lawrence",      // Columna C
-     *   color: "NGB TURQ",       // Columna D
-     *   colorArmazon: "NEGRO",   // Columna E
-     *   calibre: "52",           // Columna F (puede venir vacío)
-     *   cristal: "SOL"           // Columna G
-     * }
+     * Esperamos que el Apps Script devuelva algo así:
+     * { codigo, marca, modelo, color, armazon, calibre, cristal, ... }
      */
     function mapearArticuloDesdeAPI(apiData) {
-      // Ejemplo genérico. CAMBIÁ ESTO si tu JSON tiene otros nombres.
-      // Supongo que tu Apps Script devuelve algo así como { ok:true, data:{...} }
-      const d = apiData.data || apiData;
-
+      const d = apiData || {};
       return {
-        numero: String(d.numero || d.n_anteojo || d.N_ANTEOJO || ""),
-        marca: String(d.marca || d.MARCA || ""),
-        modelo: String(d.modelo || d.MODELO || ""),
-        color: String(d.color || d.COLOR || ""),
-        colorArmazon: String(d.color_armazon || d.COLOR_ARMAZON || ""),
-        calibre: String(d.calibre || d.CALIBRE || ""),
-        cristal: String(d.cristal || d.CRISTAL || "")
+        numero: String(d.codigo || ""),
+        marca: String(d.marca || ""),
+        modelo: String(d.modelo || ""),
+        color: String(d.color || ""),
+        colorArmazon: String(d.armazon || ""),
+        calibre: String(d.calibre || ""),
+        cristal: String(d.cristal || "")
       };
     }
 
     /*************************************************
      * LÓGICA PRINCIPAL
      *************************************************/
-
     async function generarEtiquetas() {
       const statusEl = document.getElementById("status");
       const sheetEl  = document.getElementById("sheet");
@@ -335,11 +312,10 @@
 
       const raw = document.getElementById("listaArticulos").value.trim();
       if (!raw) {
-        statusEl.textContent = "Ingresá al menos un N° de artículo.";
+        statusEl.textContent = "Ingresá al menos un número de anteojo (columna A).";
         return;
       }
 
-      // separo por coma y por salto de línea
       const numeros = raw
         .split(/[\n,]+/)
         .map(n => n.trim())
@@ -350,7 +326,7 @@
         return;
       }
 
-      statusEl.textContent = "Buscando artículos en la planilla...";
+      statusEl.textContent = "Buscando datos en la planilla de Stock...";
 
       const articulos = [];
       for (const n of numeros) {
@@ -367,7 +343,7 @@
       }
 
       if (articulos.length === 0) {
-        statusEl.textContent = "No se pudo obtener ningún artículo. Revisá el API_URL o los números.";
+        statusEl.textContent = "No se pudo obtener ningún artículo. Revisá los números.";
         return;
       }
 
@@ -377,26 +353,25 @@
         sheetEl.appendChild(label);
       }
 
-      // Generar códigos de barras una vez insertadas las etiquetas
+      // Generar códigos de barras (CODE128)
       JsBarcode(".barcode").init();
 
       statusEl.textContent = `Se generaron ${articulos.length} etiqueta(s). Ahora podés imprimir.`;
     }
 
     async function fetchArticulo(numeroArticulo) {
-      // ACA DEFINÍS CÓMO TU APPS SCRIPT RECIBE EL NÚMERO
-      // Ejemplo típico: ?op=buscar&numero=XXX
-      const url = `${API_URL}?op=buscar&numero=${encodeURIComponent(numeroArticulo)}`;
+      // Usa tu endpoint buscarArmazon con exacto=1 y multi=0 (objeto único)
+      const url = `${API_URL}?buscarArmazon=${encodeURIComponent(numeroArticulo)}&exacto=1&multi=0`;
 
       const res = await fetch(url);
       if (!res.ok) {
-        console.error("Respuesta HTTP no OK para", numeroArticulo, res.status);
+        console.error("HTTP error para", numeroArticulo, res.status);
         return null;
       }
 
       const data = await res.json();
-      if (data.ok === false) {
-        console.warn("API devolvió ok:false para", numeroArticulo, data);
+      if (!data || data.error) {
+        console.warn("Respuesta con error para", numeroArticulo, data);
         return null;
       }
 
@@ -407,14 +382,10 @@
       const div = document.createElement("div");
       div.className = "label";
 
-      // Texto para calibre y cristal
-      let extra = "";
-      if (art.calibre) {
-        extra += `Cal. ${art.calibre}  `;
-      }
-      if (art.cristal) {
-        extra += `${art.cristal}`;
-      }
+      // Armamos la línea extra con cristal y calibre si existen
+      let extra2 = "";
+      if (art.cristal) extra2 += `CRISTAL: ${art.cristal}`;
+      if (art.calibre) extra2 += (extra2 ? "  " : "") + `CAL: ${art.calibre}`;
 
       div.innerHTML = `
         <div class="label-header">
@@ -422,18 +393,19 @@
           <div class="label-text">
             <div class="linea-marca-modelo">${esc(art.marca)} ${esc(art.modelo)}</div>
             <div class="linea-color">${esc(art.color)}</div>
-            <div class="linea-extra">${esc(art.colorArmazon)} ${esc(extra)}</div>
+            <div class="linea-extra">ARMAZÓN: ${esc(art.colorArmazon)}</div>
+            <div class="linea-extra">${esc(extra2)}</div>
           </div>
         </div>
         <div class="barcode-wrap">
           <svg class="barcode"
             jsbarcode-value="${escAttr(art.numero)}"
-            jsbarcode-format="EAN13"
+            jsbarcode-format="CODE128"
             jsbarcode-displayValue="false"
             jsbarcode-height="40"
             jsbarcode-margin="0"></svg>
         </div>
-        <div class="numero-articulo">Art.: ${esc(art.numero)}</div>
+        <div class="numero-articulo">N° ${esc(art.numero)}</div>
       `;
 
       return div;
