@@ -379,36 +379,40 @@
     }
 
     function crearEtiqueta(art) {
-      const div = document.createElement("div");
-      div.className = "label";
+  const div = document.createElement("div");
+  div.className = "label";
 
-      let extra2 = "";
-      if (art.cristal) extra2 += `CRISTAL: ${art.cristal}`;
-      if (art.calibre) extra2 += (extra2 ? "  " : "") + `CAL: ${art.calibre}`;
+  // Lo que va a leer el scanner
+  const codigoScan = "#" + String(art.numero || "");
 
-      div.innerHTML = `
-        <div class="label-header">
-          <img src="logo.png" alt="Logo óptica" class="label-logo" />
-          <div class="label-text">
-            <div class="linea-marca-modelo">${esc(art.marca)} ${esc(art.modelo)}</div>
-            <div class="linea-color">${esc(art.color)}</div>
-            <div class="linea-extra">ARMAZÓN: ${esc(art.colorArmazon)}</div>
-            <div class="linea-extra">${esc(extra2)}</div>
-          </div>
-        </div>
-        <div class="barcode-wrap">
-          <svg class="barcode"
-            jsbarcode-value="${escAttr(art.numero)}"
-            jsbarcode-format="CODE128"
-            jsbarcode-displayValue="false"
-            jsbarcode-height="40"
-            jsbarcode-margin="0"></svg>
-        </div>
-        <div class="numero-articulo">N° ${esc(art.numero)}</div>
-      `;
+  let extra2 = "";
+  if (art.cristal) extra2 += `CRISTAL: ${art.cristal}`;
+  if (art.calibre) extra2 += (extra2 ? "  " : "") + `CAL: ${art.calibre}`;
 
-      return div;
-    }
+  div.innerHTML = `
+    <div class="label-header">
+      <img src="logo.png" alt="Logo óptica" class="label-logo" />
+      <div class="label-text">
+        <div class="linea-marca-modelo">${esc(art.marca)} ${esc(art.modelo)}</div>
+        <div class="linea-color">${esc(art.color)}</div>
+        <div class="linea-extra">ARMAZÓN: ${esc(art.colorArmazon)}</div>
+        <div class="linea-extra">${esc(extra2)}</div>
+      </div>
+    </div>
+    <div class="barcode-wrap">
+      <svg class="barcode"
+        jsbarcode-value="${escAttr(codigoScan)}"
+        jsbarcode-format="CODE128"
+        jsbarcode-displayValue="false"
+        jsbarcode-height="40"
+        jsbarcode-margin="0"></svg>
+    </div>
+    <div class="numero-articulo">N° ${esc(art.numero)}</div>
+  `;
+
+  return div;
+}
+
 
     function limpiarTodo() {
       document.getElementById("listaArticulos").value = "";
