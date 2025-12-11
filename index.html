@@ -146,51 +146,41 @@
       gap: 2mm;
     }
 
-    /* UNA ETIQUETA (42 x 21mm) */
+    /* UNA ETIQUETA (42 x 21 mm) */
     .label {
       width: 42mm;
       height: 21mm;
       border: 0.2mm solid #000;
       border-radius: 1mm;
-      padding: 1mm;
-      display: flex;              /* fila: logo izq, contenido der */
-      flex-direction: row;
-      align-items: stretch;
+      padding: 0.8mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
       overflow: hidden;
     }
 
-    .label-logo-wrap {
+    .label-header {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-right: 1mm;
+      gap: 0.8mm;
+      align-items: flex-start;
     }
 
-    /* Logo rotado 90° hacia la izquierda y casi todo el alto */
+    /* Logo más chico para dejar aire al texto */
     .label-logo {
-      height: 19mm;               /* casi los 21mm de alto */
-      width: auto;
+      width: 14mm;
+      height: auto;
+      max-height: 9mm;
       object-fit: contain;
-      transform: rotate(-90deg);
-      transform-origin: center center;
-    }
-
-    .label-main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      min-width: 0;
     }
 
     .label-text {
       flex: 1;
-      min-height: 0;
+      min-width: 0;
     }
 
-    /* Tamaños intermedios de fuente */
+    /* Tamaños ajustados */
     .linea-marca-modelo {
-      font-size: 2.4mm;
+      font-size: 2.2mm;
       font-weight: 600;
       line-height: 1.1;
       white-space: nowrap;
@@ -199,7 +189,7 @@
     }
 
     .linea-color {
-      font-size: 2.1mm;
+      font-size: 1.9mm;
       line-height: 1.1;
       white-space: nowrap;
       overflow: hidden;
@@ -207,11 +197,11 @@
     }
 
     .linea-extra {
-      font-size: 1.9mm;
+      font-size: 1.8mm;
       line-height: 1.1;
-      white-space: nowrap;
+      /* Permitimos que pueda cortar en dos renglones si hace falta */
+      white-space: normal;
       overflow: hidden;
-      text-overflow: ellipsis;
     }
 
     .barcode-wrap {
@@ -222,13 +212,13 @@
 
     .barcode {
       width: 100%;
-      height: 6mm;
+      height: 5.5mm;
     }
 
     .numero-articulo {
-      font-size: 2.1mm;
+      font-size: 1.9mm;
       text-align: center;
-      margin-top: 0.3mm;
+      margin-top: 0.2mm;
     }
 
     /* Modo impresión */
@@ -257,12 +247,12 @@
 <body>
   <header>
     <h1>Imprimir etiquetas de anteojos</h1>
-    <span>Etiqueta 42×21 mm • Logo vertical • Hoja A4</span>
+    <span>Etiqueta 42×21 mm • Hoja A4</span>
   </header>
 
   <main>
     <section class="panel">
-      <h2>Números de artículo</h2>
+      <h2>1. Números de artículo</h2>
       <p>
         Escribí los <strong>N° de anteojo (columna A)</strong>, separados por coma o uno por línea.<br />
         Ejemplo: <code>1318,1319,1320</code>
@@ -404,28 +394,24 @@
       if (art.calibre) extra2 += (extra2 ? "  " : "") + `CAL: ${art.calibre}`;
 
       div.innerHTML = `
-        <div class="label-logo-wrap">
+        <div class="label-header">
           <img src="logo.png" alt="Logo óptica" class="label-logo" />
-        </div>
-        <div class="label-main">
           <div class="label-text">
             <div class="linea-marca-modelo">${esc(art.marca)} ${esc(art.modelo)}</div>
             <div class="linea-color">${esc(art.color)}</div>
             <div class="linea-extra">ARMAZÓN: ${esc(art.colorArmazon)}</div>
             <div class="linea-extra">${esc(extra2)}</div>
           </div>
-          <div>
-            <div class="barcode-wrap">
-              <svg class="barcode"
-                jsbarcode-value="${escAttr(codigoScan)}"
-                jsbarcode-format="CODE128"
-                jsbarcode-displayValue="false"
-                jsbarcode-height="40"
-                jsbarcode-margin="0"></svg>
-            </div>
-            <div class="numero-articulo">${esc(codigoScan)}</div>
-          </div>
         </div>
+        <div class="barcode-wrap">
+          <svg class="barcode"
+            jsbarcode-value="${escAttr(codigoScan)}"
+            jsbarcode-format="CODE128"
+            jsbarcode-displayValue="false"
+            jsbarcode-height="40"
+            jsbarcode-margin="0"></svg>
+        </div>
+        <div class="numero-articulo">${esc(codigoScan)}</div>
       `;
 
       return div;
