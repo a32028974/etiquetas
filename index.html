@@ -159,13 +159,17 @@
       overflow: hidden;
     }
 
+    /* BLOQUE SUPERIOR (logo + texto) CON ALTURA FIJA
+       para que el código de barras quede alineado en todas */
     .label-header {
       display: flex;
       gap: 0.8mm;
       align-items: flex-start;
+      height: 11mm;        /* fijo */
+      overflow: hidden;    /* si se pasa, corta prolijo */
     }
 
-    /* Logo más chico para dejar aire al texto */
+    /* Logo un poco más chico para dejar lugar al texto */
     .label-logo {
       width: 14mm;
       height: auto;
@@ -199,9 +203,9 @@
     .linea-extra {
       font-size: 1.8mm;
       line-height: 1.1;
-      /* Permitimos que pueda cortar en dos renglones si hace falta */
-      white-space: normal;
+      white-space: nowrap;
       overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .barcode-wrap {
@@ -252,7 +256,7 @@
 
   <main>
     <section class="panel">
-      <h2>1. Números de artículo</h2>
+      <h2>Números de artículo</h2>
       <p>
         Escribí los <strong>N° de anteojo (columna A)</strong>, separados por coma o uno por línea.<br />
         Ejemplo: <code>1318,1319,1320</code>
@@ -389,9 +393,10 @@
 
       const codigoScan = "#" + String(art.numero || "");
 
+      // línea de cristal + calibre, sin "CRISTAL" ni "CAL"
       let extra2 = "";
-      if (art.cristal) extra2 += `CRISTAL: ${art.cristal}`;
-      if (art.calibre) extra2 += (extra2 ? "  " : "") + `CAL: ${art.calibre}`;
+      if (art.cristal) extra2 += art.cristal;
+      if (art.calibre) extra2 += (extra2 ? " " : "") + art.calibre;
 
       div.innerHTML = `
         <div class="label-header">
@@ -399,7 +404,7 @@
           <div class="label-text">
             <div class="linea-marca-modelo">${esc(art.marca)} ${esc(art.modelo)}</div>
             <div class="linea-color">${esc(art.color)}</div>
-            <div class="linea-extra">ARMAZÓN: ${esc(art.colorArmazon)}</div>
+            <div class="linea-extra">${esc(art.colorArmazon)}</div>
             <div class="linea-extra">${esc(extra2)}</div>
           </div>
         </div>
