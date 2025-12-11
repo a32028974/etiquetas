@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Etiquetas de anteojos • Óptica Cristal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- JsBarcode para generar el código de barras (CODE128) -->
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #f3f4f6;
+      --panel: #ffffff;
+      --line: #e5e7eb;
+      --muted: #6b7280;
+      --text: #111827;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    header {
+      padding: 10px 16px;
+      background: #111827;
+      color: #f9fafb;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+
+    header span {
+      font-size: 0.8rem;
+      opacity: 0.8;
+    }
+
+    main {
+      max-width: 950px;
+      margin: 16px auto;
+      padding: 0 10px 20px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+
+    .panel h2 {
+      margin: 0 0 6px;
+      font-size: 0.98rem;
+    }
+
+    .panel p {
+      margin: 4px 0;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      margin-top: 8px;
+      font-weight: 600;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 4px;
+      font-size: 0.9rem;
+      resize: vertical;
+      min-height: 70px;
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 0.86rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    button.primary {
+      background: #2563eb;
+      color: #f9fafb;
+    }
+
+    button.primary:hover { background: #1d4ed8; }
+
+    button.secondary {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    button.secondary:hover { background: #d1d5db; }
+
+    .status {
+      margin-top: 8px;
+      font-size: 0.8rem;
+      color: var(--muted);
+      min-height: 1em;
+    }
+
+    /* CONTENEDOR DE ETIQUETAS (A4) */
+    .sheet {
+      margin-top: 12px;
+      background: #ffffff;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      padding: 5mm;
+      width: 210mm;          /* A4 ancho */
+      min-height: 297mm;     /* A4 alto */
+      margin-left: auto;
+      margin-right: auto;
+
+      display: flex;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      gap: 2mm;
+    }
+
+    /* UNA ETIQUETA (30 x 15mm) */
+    .label {
+      width: 30mm;
+      height: 15mm;
+      border: 0.2mm solid #000;
+      border-radius: 1mm;
+      padding: 0.7mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    .label-header {
+      display: flex;
+      gap: 0.5mm;
+      align-items: flex-start;
+    }
+
+    /* Logo se mantiene 17x10mm como pediste */
+    .label-logo {
+      width: 17mm;
+      height: 10mm;
+      object-fit: contain;
+    }
+
+    .label-text {
+      flex: 1;
+      min-width: 0;
+    }
+
+    /* Tipos más chicos para que entren en 15mm de alto */
+    .linea-marca-modelo {
+      font-size: 2.0mm;
+      font-weight: 600;
+      line-height: 1.05;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .linea-color {
+      font-size: 1.8mm;
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .linea-extra {
+      font-size: 1.6mm;
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .barcode-wrap {
+      width: 100%;
+      text-align: center;
+    }
+
+    /* Más bajito para entrar debajo del logo */
+    .barcode {
+      width: 100%;
+      height: 5mm;
+    }
+
+    .numero-articulo {
+      font-size: 1.8mm;
+      text-align: center;
+      margin-top: 0.3mm;
+    }
+
+    /* Modo impresión */
+    @page {
+      size: A4;
+      margin: 5mm;
+    }
+
+    @media print {
+      body {
+        background: #fff;
+      }
+      header, .panel {
+        display: none !important;
+      }
+      .sheet {
+        border: none;
+        margin: 0;
+        padding: 0;
+        width: auto;
+        min-height: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Imprimir etiquetas de anteojos</h1>
+    <span>Etiqueta 30×15 mm • Logo 17×10 mm • Hoja A4</span>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h2>1. Números de artículo</h2>
+      <p>
+        Escribí los <strong>N° de anteojo (columna A)</strong>, separados por coma o uno por línea.<br />
+        Ejemplo: <code>1318,1319,1320</code>
+      </p>
+
+      <label for="listaArticulos">N° de anteojos</label>
+      <textarea id="listaArticulos" placeholder="Ejemplo:
+1318
+1319
+1320"></textarea>
+
+      <div class="btn-row">
+        <button type="button" class="primary" onclick="generarEtiquetas()">Generar etiquetas</button>
+        <button type="button" class="secondary" onclick="window.print()">Imprimir</button>
+        <button type="button" class="secondary" onclick="limpiarTodo()">Limpiar</button>
+      </div>
+
+      <div id="status" class="status"></div>
+    </section>
+
+    <section>
+      <div id="sheet" class="sheet">
+        <!-- Acá se insertan las etiquetas -->
+      </div>
+    </section>
+  </main>
+
+  <script>
+    /*************************************************
+     * CONFIGURACIÓN: tu Apps Script
+     *************************************************/
+    const API_URL = "https://script.google.com/macros/s/AKfycbybza1V9Om8MHI04iFBF4XM8I6am4QG3QOSr6tPnXV3vJwx5FhAzD21Iy8z6FJ1-3v3SQ/exec";
+
+    /**
+     * Mapea la respuesta de handleBuscarArmazon_ a lo que necesita la etiqueta.
+     * { codigo, marca, modelo, color, armazon, calibre, cristal, ... }
+     */
+    function mapearArticuloDesdeAPI(apiData) {
+      const d = apiData || {};
+      return {
+        numero: String(d.codigo || ""),
+        marca: String(d.marca || ""),
+        modelo: String(d.modelo || ""),
+        color: String(d.color || ""),
+        colorArmazon: String(d.armazon || ""),
+        calibre: String(d.calibre || ""),
+        cristal: String(d.cristal || "")
+      };
+    }
+
+    /*************************************************
+     * LÓGICA PRINCIPAL
+     *************************************************/
+    async function generarEtiquetas() {
+      const statusEl = document.getElementById("status");
+      const sheetEl  = document.getElementById("sheet");
+      statusEl.textContent = "";
+      sheetEl.innerHTML = "";
+
+      const raw = document.getElementById("listaArticulos").value.trim();
+      if (!raw) {
+        statusEl.textContent = "Ingresá al menos un número de anteojo (columna A).";
+        return;
+      }
+
+      const numeros = raw
+        .split(/[\n,]+/)
+        .map(n => n.trim())
+        .filter(n => n !== "");
+
+      if (numeros.length === 0) {
+        statusEl.textContent = "No encontré números válidos.";
+        return;
+      }
+
+      statusEl.textContent = "Buscando datos en la planilla de Stock...";
+
+      const articulos = [];
+      for (const n of numeros) {
+        try {
+          const art = await fetchArticulo(n);
+          if (art) {
+            articulos.push(art);
+          } else {
+            console.warn("No se encontró el artículo", n);
+          }
+        } catch (err) {
+          console.error("Error obteniendo artículo", n, err);
+        }
+      }
+
+      if (articulos.length === 0) {
+        statusEl.textContent = "No se pudo obtener ningún artículo. Revisá los números.";
+        return;
+      }
+
+      // Crear las etiquetas
+      for (const art of articulos) {
+        const label = crearEtiqueta(art);
+        sheetEl.appendChild(label);
+      }
+
+      // Generar códigos de barras (CODE128)
+      JsBarcode(".barcode").init();
+
+      statusEl.textContent = `Se generaron ${articulos.length} etiqueta(s). Ahora podés imprimir.`;
+    }
+
+    async function fetchArticulo(numeroArticulo) {
+      const url = `${API_URL}?buscarArmazon=${encodeURIComponent(numeroArticulo)}&exacto=1&multi=0`;
+
+      const res = await fetch(url);
+      if (!res.ok) {
+        console.error("HTTP error para", numeroArticulo, res.status);
+        return null;
+      }
+
+      const data = await res.json();
+      if (!data || data.error) {
+        console.warn("Respuesta con error para", numeroArticulo, data);
+        return null;
+      }
+
+      return mapearArticuloDesdeAPI(data);
+    }
+
+    function crearEtiqueta(art) {
+      const div = document.createElement("div");
+      div.className = "label";
+
+      let extra2 = "";
+      if (art.cristal) extra2 += `CRISTAL: ${art.cristal}`;
+      if (art.calibre) extra2 += (extra2 ? "  " : "") + `CAL: ${art.calibre}`;
+
+      div.innerHTML = `
+        <div class="label-header">
+          <img src="logo.png" alt="Logo óptica" class="label-logo" />
+          <div class="label-text">
+            <div class="linea-marca-modelo">${esc(art.marca)} ${esc(art.modelo)}</div>
+            <div class="linea-color">${esc(art.color)}</div>
+            <div class="linea-extra">ARMAZÓN: ${esc(art.colorArmazon)}</div>
+            <div class="linea-extra">${esc(extra2)}</div>
+          </div>
+        </div>
+        <div class="barcode-wrap">
+          <svg class="barcode"
+            jsbarcode-value="${escAttr(art.numero)}"
+            jsbarcode-format="CODE128"
+            jsbarcode-displayValue="false"
+            jsbarcode-height="40"
+            jsbarcode-margin="0"></svg>
+        </div>
+        <div class="numero-articulo">N° ${esc(art.numero)}</div>
+      `;
+
+      return div;
+    }
+
+    function limpiarTodo() {
+      document.getElementById("listaArticulos").value = "";
+      document.getElementById("sheet").innerHTML = "";
+      document.getElementById("status").textContent = "";
+    }
+
+    /*************************************************
+     * Utilidades simples de escape
+     *************************************************/
+    function esc(text) {
+      return String(text || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    function escAttr(text) {
+      return String(text || "")
+        .replace(/&/g, "&amp;")
+        .replace(/"/g, "&quot;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+  </script>
+</body>
+</html>
