@@ -1,1 +1,467 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Imprimir etiquetas de anteojos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <!-- JsBarcode para generar el código de barras -->
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #f3f4f6;
+      --panel: #ffffff;
+      --line: #e5e7eb;
+      --muted: #6b7280;
+      --text: #111827;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    header {
+      padding: 10px 16px;
+      background: #111827;
+      color: #f9fafb;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+
+    header span {
+      font-size: 0.8rem;
+      opacity: 0.8;
+    }
+
+    main {
+      max-width: 950px;
+      margin: 16px auto;
+      padding: 0 10px 20px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+
+    .panel h2 {
+      margin: 0 0 6px;
+      font-size: 0.98rem;
+    }
+
+    .panel p {
+      margin: 4px 0;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      margin-top: 8px;
+      font-weight: 600;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 4px;
+      font-size: 0.9rem;
+      resize: vertical;
+      min-height: 70px;
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 0.86rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    button.primary {
+      background: #2563eb;
+      color: #f9fafb;
+    }
+
+    button.primary:hover { background: #1d4ed8; }
+
+    button.secondary {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    button.secondary:hover { background: #d1d5db; }
+
+    button.danger {
+      background: #f97373;
+      color: #111827;
+    }
+
+    button.danger:hover { background: #ef4444; }
+
+    .status {
+      margin-top: 8px;
+      font-size: 0.8rem;
+      color: var(--muted);
+      min-height: 1em;
+    }
+
+    /* CONTENEDOR DE ETIQUETAS (A4) */
+    .sheet {
+      margin-top: 12px;
+      background: #ffffff;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      padding: 5mm;
+      /* A4: 210 x 297mm */
+      width: 210mm;
+      min-height: 297mm;
+      margin-left: auto;
+      margin-right: auto;
+
+      display: flex;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      gap: 2mm;
+    }
+
+    /* UNA ETIQUETA (60 x 30mm) */
+    .label {
+      width: 60mm;
+      height: 30mm;
+      border: 0.2mm solid #000;
+      border-radius: 1mm;
+      padding: 1.5mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    .label-header {
+      display: flex;
+      gap: 1mm;
+      align-items: flex-start;
+    }
+
+    .label-logo {
+      width: 17mm;
+      height: 10mm;
+      object-fit: contain;
+    }
+
+    .label-text {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .linea-marca-modelo {
+      font-size: 2.8mm;   /* ~8pt */
+      font-weight: 600;
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .linea-color {
+      font-size: 2.4mm;
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .linea-extra {
+      font-size: 2.3mm;
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .barcode-wrap {
+      width: 100%;
+      text-align: center;
+    }
+
+    .barcode {
+      width: 100%;
+      height: 11mm;
+    }
+
+    .numero-articulo {
+      font-size: 2.4mm;
+      text-align: center;
+      margin-top: 0.5mm;
+    }
+
+    /* Modo impresión */
+    @page {
+      size: A4;
+      margin: 5mm;
+    }
+
+    @media print {
+      body {
+        background: #fff;
+      }
+      header, .panel {
+        display: none !important;
+      }
+      .sheet {
+        border: none;
+        margin: 0;
+        padding: 0;
+        width: auto;
+        min-height: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Etiquetas de anteojos • Óptica Cristal</h1>
+    <span>Etiqueta 60×30 mm • Logo 17×10 mm • Hoja A4</span>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h2>1. Elegí los artículos</h2>
+      <p>
+        Escribí los <strong>N° de artículo (columna A)</strong>, separados por coma o uno por línea.<br />
+        Ejemplo: <code>1001, 1002, 1003</code>
+      </p>
+
+      <label for="listaArticulos">N° de artículos</label>
+      <textarea id="listaArticulos" placeholder="Ejemplo:
+1001
+1002
+1003"></textarea>
+
+      <div class="btn-row">
+        <button type="button" class="primary" onclick="generarEtiquetas()">Generar etiquetas</button>
+        <button type="button" class="secondary" onclick="limpiarTodo()">Limpiar</button>
+        <button type="button" class="secondary" onclick="window.print()">Imprimir</button>
+      </div>
+
+      <div id="status" class="status"></div>
+    </section>
+
+    <section>
+      <div id="sheet" class="sheet">
+        <!-- Acá se insertan las etiquetas -->
+      </div>
+    </section>
+  </main>
+
+  <script>
+    /*************************************************
+     * CONFIGURACIÓN
+     *************************************************/
+    // PONÉ ACÁ TU URL DE APPS SCRIPT (la que ya usás para STOCK)
+    const API_URL = "https://script.google.com/macros/s/AKfycbybza1V9Om8MHI04iFBF4XM8I6am4QG3QOSr6tPnXV3vJwx5FhAzD21Iy8z6FJ1-3v3SQ/exec";
+
+    /**
+     * Esta función transforma el JSON que te devuelve tu Apps Script
+     * en un objeto estándar para armar la etiqueta.
+     *
+     * IMPORTANTE: Ajustá los nombres de propiedades según tu respuesta real.
+     * Ejemplo de objeto esperado:
+     * {
+     *   numero: "1234",          // Columna A
+     *   marca: "Ray-Ban",        // Columna B
+     *   modelo: "Lawrence",      // Columna C
+     *   color: "NGB TURQ",       // Columna D
+     *   colorArmazon: "NEGRO",   // Columna E
+     *   calibre: "52",           // Columna F (puede venir vacío)
+     *   cristal: "SOL"           // Columna G
+     * }
+     */
+    function mapearArticuloDesdeAPI(apiData) {
+      // Ejemplo genérico. CAMBIÁ ESTO si tu JSON tiene otros nombres.
+      // Supongo que tu Apps Script devuelve algo así como { ok:true, data:{...} }
+      const d = apiData.data || apiData;
+
+      return {
+        numero: String(d.numero || d.n_anteojo || d.N_ANTEOJO || ""),
+        marca: String(d.marca || d.MARCA || ""),
+        modelo: String(d.modelo || d.MODELO || ""),
+        color: String(d.color || d.COLOR || ""),
+        colorArmazon: String(d.color_armazon || d.COLOR_ARMAZON || ""),
+        calibre: String(d.calibre || d.CALIBRE || ""),
+        cristal: String(d.cristal || d.CRISTAL || "")
+      };
+    }
+
+    /*************************************************
+     * LÓGICA PRINCIPAL
+     *************************************************/
+
+    async function generarEtiquetas() {
+      const statusEl = document.getElementById("status");
+      const sheetEl  = document.getElementById("sheet");
+      statusEl.textContent = "";
+      sheetEl.innerHTML = "";
+
+      const raw = document.getElementById("listaArticulos").value.trim();
+      if (!raw) {
+        statusEl.textContent = "Ingresá al menos un N° de artículo.";
+        return;
+      }
+
+      // separo por coma y por salto de línea
+      const numeros = raw
+        .split(/[\n,]+/)
+        .map(n => n.trim())
+        .filter(n => n !== "");
+
+      if (numeros.length === 0) {
+        statusEl.textContent = "No encontré números válidos.";
+        return;
+      }
+
+      statusEl.textContent = "Buscando artículos en la planilla...";
+
+      const articulos = [];
+      for (const n of numeros) {
+        try {
+          const art = await fetchArticulo(n);
+          if (art) {
+            articulos.push(art);
+          } else {
+            console.warn("No se encontró el artículo", n);
+          }
+        } catch (err) {
+          console.error("Error obteniendo artículo", n, err);
+        }
+      }
+
+      if (articulos.length === 0) {
+        statusEl.textContent = "No se pudo obtener ningún artículo. Revisá el API_URL o los números.";
+        return;
+      }
+
+      // Crear las etiquetas
+      for (const art of articulos) {
+        const label = crearEtiqueta(art);
+        sheetEl.appendChild(label);
+      }
+
+      // Generar códigos de barras una vez insertadas las etiquetas
+      JsBarcode(".barcode").init();
+
+      statusEl.textContent = `Se generaron ${articulos.length} etiqueta(s). Ahora podés imprimir.`;
+    }
+
+    async function fetchArticulo(numeroArticulo) {
+      // ACA DEFINÍS CÓMO TU APPS SCRIPT RECIBE EL NÚMERO
+      // Ejemplo típico: ?op=buscar&numero=XXX
+      const url = `${API_URL}?op=buscar&numero=${encodeURIComponent(numeroArticulo)}`;
+
+      const res = await fetch(url);
+      if (!res.ok) {
+        console.error("Respuesta HTTP no OK para", numeroArticulo, res.status);
+        return null;
+      }
+
+      const data = await res.json();
+      if (data.ok === false) {
+        console.warn("API devolvió ok:false para", numeroArticulo, data);
+        return null;
+      }
+
+      return mapearArticuloDesdeAPI(data);
+    }
+
+    function crearEtiqueta(art) {
+      const div = document.createElement("div");
+      div.className = "label";
+
+      // Texto para calibre y cristal
+      let extra = "";
+      if (art.calibre) {
+        extra += `Cal. ${art.calibre}  `;
+      }
+      if (art.cristal) {
+        extra += `${art.cristal}`;
+      }
+
+      div.innerHTML = `
+        <div class="label-header">
+          <img src="logo.png" alt="Logo óptica" class="label-logo" />
+          <div class="label-text">
+            <div class="linea-marca-modelo">${esc(art.marca)} ${esc(art.modelo)}</div>
+            <div class="linea-color">${esc(art.color)}</div>
+            <div class="linea-extra">${esc(art.colorArmazon)} ${esc(extra)}</div>
+          </div>
+        </div>
+        <div class="barcode-wrap">
+          <svg class="barcode"
+            jsbarcode-value="${escAttr(art.numero)}"
+            jsbarcode-format="EAN13"
+            jsbarcode-displayValue="false"
+            jsbarcode-height="40"
+            jsbarcode-margin="0"></svg>
+        </div>
+        <div class="numero-articulo">Art.: ${esc(art.numero)}</div>
+      `;
+
+      return div;
+    }
+
+    function limpiarTodo() {
+      document.getElementById("listaArticulos").value = "";
+      document.getElementById("sheet").innerHTML = "";
+      document.getElementById("status").textContent = "";
+    }
+
+    /*************************************************
+     * Utilidades simples de escape
+     *************************************************/
+    function esc(text) {
+      return String(text || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    function escAttr(text) {
+      return String(text || "")
+        .replace(/&/g, "&amp;")
+        .replace(/"/g, "&quot;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+  </script>
+</body>
+</html>
