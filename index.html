@@ -148,17 +148,16 @@
 
     /* UNA ETIQUETA (42 x 21mm) */
     .label {
-  width: 42mm;     /* ← antes 60mm */
-  height: 21mm;    /* ← antes 30mm */
-  border: 0.2mm solid #000;
-  border-radius: 1mm;
-  padding: 1mm;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  overflow: hidden;
-}
-
+      width: 42mm;
+      height: 21mm;
+      border: 0.2mm solid #000;
+      border-radius: 1mm;
+      padding: 1mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;  /* más parecido a la primera versión */
+      overflow: hidden;
+    }
 
     .label-header {
       display: flex;
@@ -166,6 +165,7 @@
       align-items: flex-start;
     }
 
+    /* Logo 17 x 10mm */
     .label-logo {
       width: 17mm;
       height: 10mm;
@@ -177,17 +177,18 @@
       min-width: 0;
     }
 
+    /* Tamaños intermedios de fuente */
     .linea-marca-modelo {
-      font-size: 2.2mm; 
+      font-size: 2.4mm;
       font-weight: 600;
-      line-height: 1.05;
+      line-height: 1.1;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
     .linea-color {
-      font-size: 2.0mm;
+      font-size: 2.1mm;
       line-height: 1.1;
       white-space: nowrap;
       overflow: hidden;
@@ -195,7 +196,7 @@
     }
 
     .linea-extra {
-      font-size: 1.8mm;
+      font-size: 1.9mm;
       line-height: 1.1;
       white-space: nowrap;
       overflow: hidden;
@@ -205,15 +206,16 @@
     .barcode-wrap {
       width: 100%;
       text-align: center;
+      margin-top: 0.8mm;  /* separa texto de código */
     }
 
     .barcode {
       width: 100%;
-      height: 7mm;
+      height: 6mm;        /* más bajito para que entre todo */
     }
 
     .numero-articulo {
-      font-size: 2.0mm;
+      font-size: 2.1mm;
       text-align: center;
       margin-top: 0.3mm;
     }
@@ -244,12 +246,12 @@
 <body>
   <header>
     <h1>Imprimir etiquetas de anteojos</h1>
-    <span>Etiqueta 60×30 mm • Logo 17×10 mm • Hoja A4</span>
+    <span>Etiqueta 42×21 mm • Logo 17×10 mm • Hoja A4</span>
   </header>
 
   <main>
     <section class="panel">
-      <h2>Números de artículo</h2>
+      <h2>1. Números de artículo</h2>
       <p>
         Escribí los <strong>N° de anteojo (columna A)</strong>, separados por coma o uno por línea.<br />
         Ejemplo: <code>1318,1319,1320</code>
@@ -285,8 +287,6 @@
 
     /**
      * Mapea la respuesta de handleBuscarArmazon_ a lo que necesita la etiqueta.
-     *
-     * Esperamos que el Apps Script devuelva algo así:
      * { codigo, marca, modelo, color, armazon, calibre, cristal, ... }
      */
     function mapearArticuloDesdeAPI(apiData) {
@@ -314,6 +314,7 @@
       const raw = document.getElementById("listaArticulos").value.trim();
       if (!raw) {
         statusEl.textContent = "Ingresá al menos un número de anteojo (columna A).";
+        document.getElementById("listaArticulos").focus();
         return;
       }
 
@@ -324,6 +325,7 @@
 
       if (numeros.length === 0) {
         statusEl.textContent = "No encontré números válidos.";
+        document.getElementById("listaArticulos").focus();
         return;
       }
 
@@ -345,6 +347,7 @@
 
       if (articulos.length === 0) {
         statusEl.textContent = "No se pudo obtener ningún artículo. Revisá los números.";
+        document.getElementById("listaArticulos").focus();
         return;
       }
 
@@ -358,6 +361,7 @@
       JsBarcode(".barcode").init();
 
       statusEl.textContent = `Se generaron ${articulos.length} etiqueta(s). Ahora podés imprimir.`;
+      document.getElementById("listaArticulos").focus();
     }
 
     async function fetchArticulo(numeroArticulo) {
@@ -380,35 +384,38 @@
     }
 
     function crearEtiqueta(art) {
-  const div = document.createElement("div");
-  div.className = "label";
+      const div = document.createElement("div");
+      div.className = "label";
 
-  const codigoScan = "#" + String(art.numero || "");
+      // Código que leerá el scanner
+      const codigoScan = "#" + String(art.numero || "");
 
-  let extra2 = "";
-  if (art.cristal) extra2 += `CRISTAL: ${art.cristal}`;
-  if (art.calibre) extra2 += (extra2 ? "  " : "") + `CAL: ${art.calibre}`;
+      // Armamos la línea extra con cristal y calibre si existen
+      let extra2 = "";
+      if (art.cristal) extra2 += `CRISTAL: ${art.cristal}`;
+      if (art.calibre) extra2 += (extra2 ? "  " : "") + `CAL: ${art.calibre}`;
 
-  div.innerHTML = `
-    <div class="label-header">
-      <img src="logo.png" alt="Logo óptica" class="label-logo" />
-      <div class="label-text">
-        <div class="linea-marca-modelo">${esc(art.marca)} ${esc(art.modelo)}</div>
-        <div class="linea-color">${esc(art.color)}</div>
-        <div class="linea-extra">ARMAZÓN: ${esc(art.colorArmazon)}</div>
-        <div class="linea-extra">${esc(extra2)}</div>
-      </div>
-    </div>
-    <div class="barcode-wrap">
-      <svg class="barcode"
-        jsbarcode-value="${escAttr(codigoScan)}"
-        jsbarcode-format="CODE128"
-        jsbarcode-displayValue="false"
-        jsbarcode-height="30"
-        jsbarcode-margin="0"></svg>
-    </div>
-    <div class="numero-articulo">#${esc(art.numero)}</div>
-  `;
+      div.innerHTML = `
+        <div class="label-header">
+          <img src="logo.png" alt="Logo óptica" class="label-logo" />
+          <div class="label-text">
+            <div class="linea-marca-modelo">${esc(art.marca)} ${esc(art.modelo)}</div>
+            <div class="linea-color">${esc(art.color)}</div>
+            <div class="linea-extra">ARMAZÓN: ${esc(art.colorArmazon)}</div>
+            <div class="linea-extra">${esc(extra2)}</div>
+          </div>
+        </div>
+        <div class="barcode-wrap">
+          <svg class="barcode"
+            jsbarcode-value="${escAttr(codigoScan)}"
+            jsbarcode-format="CODE128"
+            jsbarcode-displayValue="false"
+            jsbarcode-height="40"
+            jsbarcode-margin="0"></svg>
+        </div>
+        <div class="numero-articulo">${esc(codigoScan)}</div>
+      `;
+
       return div;
     }
 
@@ -416,6 +423,7 @@
       document.getElementById("listaArticulos").value = "";
       document.getElementById("sheet").innerHTML = "";
       document.getElementById("status").textContent = "";
+      document.getElementById("listaArticulos").focus();
     }
 
     /*************************************************
@@ -435,6 +443,14 @@
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;");
     }
+
+    /*************************************************
+     * Foco automático al cargar
+     *************************************************/
+    document.addEventListener("DOMContentLoaded", () => {
+      const ta = document.getElementById("listaArticulos");
+      if (ta) ta.focus();
+    });
   </script>
 </body>
 </html>
