@@ -383,6 +383,7 @@
       const div = document.createElement("div");
       div.className = "label";
 
+      const codigoScan = "#" + String(art.numero || "");
       // Armamos la línea extra con cristal y calibre si existen
       let extra2 = "";
       if (art.cristal) extra2 += `CRISTAL: ${art.cristal}`;
